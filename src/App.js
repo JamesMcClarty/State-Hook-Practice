@@ -1,26 +1,30 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
-
+const initialTodos = [
+  {
+    id: 'a',
+    task: 'Learn React',
+    complete: true,
+  },
+  {
+    id: 'b',
+    task: 'Learn Firebase',
+    complete: true,
+  },
+  {
+    id: 'c',
+    task: 'Learn GraphQL',
+    complete: false,
+  },
+];
+const App = () => (
+  <div>
+    <ul>
+      {initialTodos.map(todo => (
+        <li key={todo.id}>
+          <label>{todo.task}</label>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 export default App;
