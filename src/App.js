@@ -1,5 +1,7 @@
-import React, {useState, useReducer} from 'react';
+import React, {useState, useReducer, useContext, createContext} from 'react';
 import uuid from 'uuid/v4';
+
+const TodoContext = createContext(null);
 
 const initialTodos = [
   {
@@ -32,10 +34,42 @@ const initialTodos = [
     }
   };
 
+  const todoReducer = (state, action) => {
+    switch (action.type) {
+      case 'DO_TODO':
+        return state.map(todo => {
+          if(todo.id === action.id){
+            return {...todo, complete:true };
+          }
+          else{
+            return todo;
+          }
+        });
+      case 'UNDO_TODO':
+          return state.map(todo => {
+            if(todo.id === action.id){
+              return {...todo, complete:false };
+            }
+            else{
+              return todo;
+            }
+          });
+      case 'ADD_TODO':
+            return state.concat({
+              task: action.task,
+              id: action.id,
+              complete: false,
+            });
+
+      default:
+        throw new Error();
+    }
+  }
+
 const App = () => {
 
   //States
-  const [todos, setTodos] = useState(initialTodos);
+  const [todos, dispatchTodos] = useReducer(todoReducer, initialTodos);
   const [task, setTask] = useState('');
   const [filter, dispatchFilter] = useReducer(filterReducer,'ALL');
 
@@ -71,17 +105,11 @@ const App = () => {
   });
 
     //Labels the todo as complete from the id
-    const handleChangeCheckbox = id => {
-      setTodos(
-        todos.map(todo => {
-          if(todo.id === id){
-            return {...todo,complete: !todo.complete};
-          }
-          else{
-            return todo;
-          }
-        })
-      );
+    const handleChangeCheckbox = todo => {
+      dispatchTodos({
+        type: todo.complete ? 'UNDO_TODO' : 'DO_TODO',
+        id: todo.id,
+      });
     };
     
   //Event method to handle input on every change
@@ -92,7 +120,7 @@ const App = () => {
   //Event method to handle the submission
   const handleSubmit = event => {
     if(task){
-      setTodos(todos.concat({id:uuid(), task, complete:false}));
+      dispatchTodos({ type: 'ADD_TODO', task, id: uuid() })
     }
     setTask('');
     event.preventDefault();
@@ -120,7 +148,7 @@ const App = () => {
               <input
                 type="checkbox"
                 checked={todo.complete}
-                onChange={() => handleChangeCheckbox(todo.id)}
+                onChange={() => handleChangeCheckbox(todo)}
               />
               {todo.task}
             </label>
