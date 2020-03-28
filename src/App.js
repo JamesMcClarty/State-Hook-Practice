@@ -70,22 +70,7 @@ const App = () => {
 
   //States
   const [todos, dispatchTodos] = useReducer(todoReducer, initialTodos);
-  const [task, setTask] = useState('');
   const [filter, dispatchFilter] = useReducer(filterReducer,'ALL');
-
-    //Complex State Hook Functions
-
-    const handleShowAll = () => {
-      dispatchFilter({type: 'SHOW_ALL'})
-    };
-  
-    const handleShowComplete = () =>{
-      dispatchFilter({type: 'SHOW_COMPLETE'})
-    };
-  
-    const handleShowIncomplete = () =>{
-      dispatchFilter({type: 'SHOW_INCOMPLETE'})
-    }
 
 
   //Todo Filter
@@ -104,32 +89,33 @@ const App = () => {
     return false
   });
 
-    //Labels the todo as complete from the id
-    const handleChangeCheckbox = todo => {
-      dispatchTodos({
-        type: todo.complete ? 'UNDO_TODO' : 'DO_TODO',
-        id: todo.id,
-      });
-    };
-    
-  //Event method to handle input on every change
-  const handleChangeInput = event => {
-    setTask(event.target.value)
-  };
-
-  //Event method to handle the submission
-  const handleSubmit = event => {
-    if(task){
-      dispatchTodos({ type: 'ADD_TODO', task, id: uuid() })
-    }
-    setTask('');
-    event.preventDefault();
-  };
-
-
   return (
-    <div>
-      <div>
+    <TodoContext.Provider value={dispatchTodos}>
+      <Filter dispatch={dispatchFilter} />
+      <TodoList todos={filteredTodos} />
+      <AddTodo/>
+    </TodoContext.Provider>
+  );
+};
+
+const Filter = ({ dispatch }) =>{
+ 
+      //Complex State Hook Functions
+
+      const handleShowAll = () => {
+        dispatch({type: 'SHOW_ALL'})
+      };
+    
+      const handleShowComplete = () =>{
+        dispatch({type: 'SHOW_COMPLETE'})
+      };
+    
+      const handleShowIncomplete = () =>{
+        dispatch({type: 'SHOW_INCOMPLETE'})
+      }
+
+      return(
+        <div>
         <button type="button" onClick={handleShowAll}>
           Show All
         </button>
@@ -140,32 +126,59 @@ const App = () => {
           Show Incomplete
         </button>
       </div>
+      );
+};
 
-      <ul>
-        {filteredTodos.map(todo => (
-          <li key={todo.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={todo.complete}
-                onChange={() => handleChangeCheckbox(todo)}
-              />
-              {todo.task}
-            </label>
-          </li>
-        ))}
-      </ul>
+const TodoList = ({ todos }) => (
+  <ul>
+     {todos.map(todo => (
+       <TodoItem key ={todo.id} todo={todo}/>
+     ))}
+  </ul>
+);
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={task}
-          onChange={handleChangeInput}
-        />
-        <button type="submit">Add Todo</button>
-      </form>
-    </div>
+const TodoItem = ({todo}) => {
+  const dispatch = useContext(TodoContext);
+
+  const handleChange = () =>
+  dispatch({
+    type: todo.complete ? 'UNDO_TODO' : 'DO_TODO',
+    id: todo.id
+  });
+
+  return (
+    <li>
+      <lable>
+        <input type="checkbox" checked={todo.complete} onChange={handleChange}/>
+        {todo.task}
+      </lable>
+    </li>
   );
 };
+
+const AddTodo = () => {
+  const dispatch = useContext(TodoContext);
+
+  const [task,setTask] = useState('');
+
+  const handleSubmit = event => {
+    if(task){
+      dispatch({ type: 'ADD_TODO', task });
+    }
+
+    setTask('');
+
+    event.preventDefault();
+  };
+
+  const handleChange = event => setTask(event.target.value);
+
+  return(
+    <form onSubmit={handleSubmit}>
+      <input type="text" value={task} onChange={handleChange} />
+      <button type = "submit">Add Todo</button>
+    </form>
+  )
+}
 
 export default App;
